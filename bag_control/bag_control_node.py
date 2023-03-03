@@ -1,5 +1,5 @@
 import rclpy
-from rclpy.node import node
+from rclpy.node import Node
 import os
 import subprocess
 
@@ -20,26 +20,31 @@ class BagControl(Node):
     def declare_params(self):
         self.declare_parameter('bag_start_command', '')
         self.declare_parameter('bag_stop_command', '')
-        self.declare_parameter('bag_stop_delay', '0')
+        self.declare_parameter('bag_stop_delay', 0.0)
 
     def state_callback(self, msg):
         if not self.logging:
             if msg.armed:
-                os.system(self.get_parameter('bag_start_command').get_parameter_value().string_value)
+                cmd = self.get_parameter('bag_start_command').get_parameter_value().string_value
+                self.get_logger().info("Starting bag with command %s" % cmd)
+                os.system(cmd)
                 self.logging = True
         elif self.logging and not self.log_timeout_active:
             if not msg.armed:
                 self.log_timeout_active = True
-                self.log_stop_timer = self.create_timer(
-                    self.get_parameter('bag_stop_delay').get_parameter_value().float_value,
-                    timer_callback)
+                to = self.get_parameter('bag_stop_delay').get_parameter_value().double_value
+                self.get_logger().info("Starting log shutdown timer with time %4.4fs" % to)
+                self.log_stop_timer = self.create_timer(to, self.timer_callback)
         elif self.logging and self.log_timeout_active:
             if msg.armed:
+                self.get_logger().info("Aborting log shutdown timer")
                 self.destroy_timer(self.log_stop_timer)
                 self.log_timeout_active = False
 
     def timer_callback(self):
-        os.system(self.get_parameter('bag_stop_command').get_parameter_value().string_value)
+        cmd = self.get_parameter('bag_stop_command').get_parameter_value().string_value
+        self.get_logger().info("Stopping bag with command %s" % cmd)
+        os.system(cmd)
         self.logging = False
         self.log_timeout_active = False
         self.destroy_timer(self.log_stop_timer)
