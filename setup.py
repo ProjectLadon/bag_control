@@ -13,14 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='pierce',
+    maintainer='Pierce Nichols',
     maintainer_email='pierce@ladonrobotics.com',
     description='Package for turning on and off bag logging based on a mavros state message',
-    license='GPL v3',
+    license='Copyright Ladon Robotics (c) 2023. All Rights Reserved',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'bag_control_node = bag_control.bag_control_node:main'
+            'bag_control_node = bag_control.bag_control_node:main',
         ],
     },
 )
